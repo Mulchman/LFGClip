@@ -1,0 +1,28 @@
+{
+  "name": "LFGClip",
+  "version": "0.1.0",
+  "description": "Add functionality to destinylfg.net to copy player names to the clipboard",
+  "main": "index.html",
+  "engines": {
+    "node": "6.9.2"
+  },
+  "scripts": {
+    "test": "echo \"No tests\"",
+    "lint": "eslint . --fix=true"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mulchman/LFGClip"
+  },
+  "author": "Mulchman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Mulchman/LFGClip/issues"
+  },
+  "homepage": "https://github.com/Mulchman/LFGClip",
+  "devDependencies": {
+    "babel-eslint": "8.2.3",
+    "eslint": "4.19.1"
+  },
+  "dependencies": {}
+}
