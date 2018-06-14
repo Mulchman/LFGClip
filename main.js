@@ -40,7 +40,7 @@
     }
   };
 
-  const handleClick = function (event) {
+  const handleClick = function(event) {
     const name =
       event.target.parentElement.classList.contains(classSentinel2)
         ? event.target.parentElement.previousElementSibling.innerText
@@ -54,13 +54,13 @@
       ? document.createElement('span')
       : document.createElement('a');
 
-    element.title = "Copy to clipboard";    
+    element.title = "Copy to clipboard";
     element.onclick = handleClick;
 
     if (isTab) {
       element.className = classSentinel1 + ' ' + classSentinel2;
-      element.setAttribute('style', "display: inline - block; padding: 0 7px; position: relative; font - size: 13px; left: 4px;");      
-    } else {      
+      element.setAttribute('style', "display: inline - block; padding: 0 7px; position: relative; font - size: 13px; left: 4px;");
+    } else {
       element.className = classSentinel1 + ' ' + className3;
       element.href = "javascript:void(0)";
     }
@@ -83,16 +83,7 @@
     return false;
   };
 
-  const printFlat = function (root) {
-    console.log("[] root: %o", root);
-    const children = root.children;
-    for (let i = 0; i < children.length; i++) {
-      const child = children[i];
-      console.log("[] child: %o", child);
-    }
-  };
-
-  const runLoop = function () {
+  const runLoop = function() {
     let countAdded = 0;
 
     const listElements = document.getElementsByClassName(className1);
@@ -105,7 +96,7 @@
     });
 
     const tabElements = document.getElementsByClassName(className2);
-    [].forEach.call(tabElements, function (tabElement) {
+    [].forEach.call(tabElements, function(tabElement) {
       if (tabElement.hasAttribute(attribute1)) {
         const element = tabElement.firstElementChild;
         if (!containsClipboardElement(element)) {
