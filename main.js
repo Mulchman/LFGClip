@@ -2,7 +2,6 @@
   console.log("[LFG Clipboard] Running...");
 
   const attributeClip = "lfgclip-name";
-  const attributeChatStyle = "display: inline-block; padding: 0 7px; position: relative; font-size: 13px; left: 4px;";
   const getTitle = (name) => ("Copy '" + name + "' to clipboard");
   const intervalMs = 3000;
   const sentinelList = "lfgclip-sentinel-list";
@@ -38,10 +37,9 @@
     element.setAttribute(attributeClip, name);
 
     if (isChat) {
-      element.className = sentinelChat;
-      element.setAttribute('style', attributeChatStyle);
+      element.className = sentinelChat + ' lfgclip-chat';
     } else {
-      element.className = sentinelList + ' icon-link context-link-wrapper';
+      element.className = sentinelList + ' icon-link lfgclip-list';
       element.href = "javascript:void(0)";
     }
 
@@ -82,6 +80,14 @@
     return element.classList.contains(sentinel);
   }
 
+  function adjustSendMessagePadding(element) {
+    const path = ".//*[contains(@class, 'chat-link')]";
+    const result = document.evaluate(path, element, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+    if (result.singleNodeValue) {
+      result.singleNodeValue.style.paddingRight = "0";
+    }
+  }
+
   function runLoopList() {
     let count = 0;
     const gamertags = getElementsByXPath(xpathList);
@@ -94,6 +100,7 @@
 
       const name = getNameFromListElement(gamertag);
       if (name) {
+        adjustSendMessagePadding(gamertag);
         const clipElement = createClipElement(name, false);
         gamertag.appendChild(clipElement);
         gamertag.classList.add(sentinelList);
