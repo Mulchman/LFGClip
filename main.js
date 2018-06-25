@@ -15,16 +15,18 @@
   </div>
   */
 
+  const attributeClip = "lfgclip-name";
+  const attributeChatStyle = "display: inline-block; padding: 0 7px; position: relative; font-size: 13px; left: 4px;";
+  const getTitle = (name) => ("Copy '" + name + "' to clipboard");
   const intervalMs = 3000;
-  const attribute1 = 'data-gamertag';
-  const className1 = 'gamertag-block';
-  const className2 = 'tab';
-  const className3 = 'icon-link';
-  const classSentinel1 = 'lfg-clipboard';
-  const classSentinel2 = 'lfg-clipboard-tab';
+  const sentinelList = "lfgclip-sentinel-list";
+  const sentinelChat = "lfgclip-sentinel-chat";
+  const xpathList = "//*[contains(@class, 'gamertag-block')]";
+  const xpathListName = ".//*[contains(@class, 'gamertag')]";
+  const xpathChat = "//*[contains(@class, 'tab') and ./@data-gamertag]";
 
   // https://stackoverflow.com/a/43483323
-  const copyNameToClipboard = function(name) {
+  function copyNameToClipboard(name) {
     function handler(event) {
       event.clipboardData.setData('text/plain', name);
       event.preventDefault();
@@ -38,30 +40,27 @@
     } else {
       console.log("[LFG Clipboard (%o)] Failed to copy %o to the clipboard!", chrome.runtime.id, name);
     }
-  };
+  }
 
-  const handleClick = function(event) {
-    const name =
-      event.target.parentElement.classList.contains(classSentinel2)
-        ? event.target.parentElement.previousElementSibling.innerText
-        : event.target.parentElement.parentElement.firstChild.innerText;
-
+  function handleClick() {
+    const name = this.getAttribute(attributeClip);
     copyNameToClipboard(name);
-  };
+  }
 
-  const createClipboardElement = function(isTab) {
-    const element = isTab
+  function createClipElement(name, isChat) {
+    const element = isChat
       ? document.createElement('span')
       : document.createElement('a');
 
-    element.title = "Copy to clipboard";
+    element.title = getTitle(name);
     element.onclick = handleClick;
+    element.setAttribute(attributeClip, name);
 
-    if (isTab) {
-      element.className = classSentinel1 + ' ' + classSentinel2;
-      element.setAttribute('style', "display: inline - block; padding: 0 7px; position: relative; font - size: 13px; left: 4px;");
+    if (isChat) {
+      element.className = sentinelChat;
+      element.setAttribute('style', attributeChatStyle);
     } else {
-      element.className = classSentinel1 + ' ' + className3;
+      element.className = sentinelList + ' icon-link context-link-wrapper';
       element.href = "javascript:void(0)";
     }
 
@@ -70,47 +69,95 @@
 
     element.appendChild(i);
     return element;
-  };
+  }
 
-  const containsClipboardElement = function(element) {
-    const children = element.children;
-    for (let i = 0; i < children.length; i++) {
-      const child = children[i];
-      if (child.classList.contains(classSentinel1)) {
-        return true;
+  function getElementsByXPath(path) {
+    const retval = [];
+
+    const elements = document.evaluate(path, document, null, XPathResult.ANY_TYPE, null);
+    let iterator = elements.iterateNext();
+    while (iterator) {
+      retval.push(iterator);
+      iterator = elements.iterateNext();
+    }
+
+    return retval;
+  }
+
+  function getNameFromListElement(element) {
+    const path = xpathListName;
+    const result = document.evaluate(path, element, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+    const name = result.singleNodeValue ? result.singleNodeValue.textContent.trim() : null;
+
+    return name;
+  }
+
+  function getNameFromChatElement(element) {
+    const name = element.getAttribute('data-gamertag');
+    return name;
+  }
+
+  function elementHasSentinel(element, sentinel) {
+    return element.classList.contains(sentinel);
+  }
+
+  function runLoopList() {
+    let count = 0;
+    const gamertags = getElementsByXPath(xpathList);
+    for (let i = 0; i < gamertags.length; i++) {
+      const gamertag = gamertags[i];
+
+      if (elementHasSentinel(gamertag, sentinelList)) {
+        continue;
+      }
+
+      const name = getNameFromListElement(gamertag);
+      if (name) {
+        const clipElement = createClipElement(name, false);
+        gamertag.appendChild(clipElement);
+        gamertag.classList.add(sentinelList);
+
+        count += 1;
       }
     }
-    return false;
-  };
 
-  const runLoop = function() {
-    let countAdded = 0;
+    return count;
+  }
 
-    const listElements = document.getElementsByClassName(className1);
-    [].forEach.call(listElements, function(element) {
-      if (!containsClipboardElement(element)) {
-        const anchor = createClipboardElement(false);
-        element.appendChild(anchor);
-        countAdded++;
+  function runLoopChat() {
+    let count = 0;
+    const gamertags = getElementsByXPath(xpathChat);
+    for (let i = 0; i < gamertags.length; i++) {
+      const gamertag = gamertags[i];
+
+      if (elementHasSentinel(gamertag, sentinelChat)) {
+        continue;
       }
-    });
 
-    const tabElements = document.getElementsByClassName(className2);
-    [].forEach.call(tabElements, function(tabElement) {
-      if (tabElement.hasAttribute(attribute1)) {
-        const element = tabElement.firstElementChild;
-        if (!containsClipboardElement(element)) {
-          const anchor = createClipboardElement(true);
-          element.insertBefore(anchor, element.children[1]);
-          countAdded++;
-        }
+      const name = getNameFromChatElement(gamertag);
+      if (name) {
+        const clipElement = createClipElement(name, true);
+
+        const subElement = gamertag.firstElementChild;
+        subElement.insertBefore(clipElement, subElement.children[1]);
+
+        gamertag.classList.add(sentinelChat);
+        count += 1;
       }
-    });
-
-    if (countAdded > 0) {
-      console.log("[LFG Clipboard (%o)] Added %o elements...", chrome.runtime.id, countAdded);
     }
-  };
+
+    return count;
+  }
+
+  function runLoop() {
+    let count = 0;
+    count += runLoopList();
+    count += runLoopChat();
+
+    if (count > 0) {
+      console.log("[LFG Clipboard (%o)] Added %o elements...", chrome.runtime.id, count);
+    }
+  }
 
   // ----
 
