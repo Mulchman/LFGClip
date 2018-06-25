@@ -1,19 +1,5 @@
 (function() {
-  console.log("[LFG Clipboard (%o)] Running...", chrome.runtime.id);
-
-  // A lot of this is very brittle because it's based on the DOM.
-
-  /*
-  <div class="gamertag-block">
-    <a href="#" class="gamertag context-link" data-stattooltip="true" data-platform="4" data-id="" data-character="">name#12345</a>
-    <a title="Send message" class="chat-link icon-link context-link-wrapper need-claimed-gamertag-to-message" href="#">
-      <i class="fa fa-envelope-o"></i>
-    </a>
-
-    <!-- add copy element here -->
-
-  </div>
-  */
+  console.log("[LFG Clipboard] Running...");
 
   const attributeClip = "lfgclip-name";
   const attributeChatStyle = "display: inline-block; padding: 0 7px; position: relative; font-size: 13px; left: 4px;";
@@ -25,21 +11,16 @@
   const xpathListName = ".//*[contains(@class, 'gamertag')]";
   const xpathChat = "//*[contains(@class, 'tab') and ./@data-gamertag]";
 
-  // https://stackoverflow.com/a/43483323
   function copyNameToClipboard(name) {
-    function handler(event) {
-      event.clipboardData.setData('text/plain', name);
-      event.preventDefault();
-      document.removeEventListener('copy', handler, true);
-    }
+    const copyFrom = document.createElement('textarea');
+    copyFrom.textContent = name;
 
-    document.addEventListener('copy', handler, true);
-    const result = document.execCommand('copy');
-    if (result) {
-      console.log("[LFG Clipboard (%o)] Successfully copied %o to the clipboard!", chrome.runtime.id, name);
-    } else {
-      console.log("[LFG Clipboard (%o)] Failed to copy %o to the clipboard!", chrome.runtime.id, name);
-    }
+    const body = document.getElementsByTagName('body')[0];
+    body.appendChild(copyFrom);
+    copyFrom.select();
+    document.execCommand('copy');
+    body.removeChild(copyFrom);
+    console.log("[LFG Clipboard] Copied %o to the clipboard.", name);
   }
 
   function handleClick() {
@@ -155,7 +136,7 @@
     count += runLoopChat();
 
     if (count > 0) {
-      console.log("[LFG Clipboard (%o)] Added %o elements...", chrome.runtime.id, count);
+      console.log("[LFG Clipboard] Added %o element(s).", count);
     }
   }
 
